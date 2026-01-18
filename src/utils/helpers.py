@@ -1,8 +1,25 @@
 import os
+import re
 import pandas as pd
 
 # Correct dataset path
 DATASET_PATH = "data/master_training_data.csv"
+
+
+def clean_text(text):
+    """
+    Basic text cleaning function.
+    """
+    # Convert to lowercase
+    text = str(text).lower()
+    
+    # Remove URLs
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
 
 
 def load_data():
@@ -14,12 +31,33 @@ def load_data():
         raise FileNotFoundError(f"Dataset file not found: {DATASET_PATH}")
 
     df = pd.read_csv(DATASET_PATH)
+    
+    # Clean column names (remove extra spaces and fix malformed headers)
+    df.columns = df.columns.str.strip()
+    
+    # Fix the malformed 'text' column name
+    if '5 877=text' in df.columns:
+        df.rename(columns={'5 877=text': 'text'}, inplace=True)
+    
+    # Also handle any column that ends with '=text'
+    for col in df.columns:
+        if col.endswith('=text'):
+            df.rename(columns={col: 'text'}, inplace=True)
+            break
+    
+    print(f"Available columns: {df.columns.tolist()}")
+    print(f"Dataset shape: {df.shape}")
 
     if "text" not in df.columns or "label" not in df.columns:
-        raise ValueError("Dataset must contain 'text' and 'label' columns")
+        raise ValueError(f"Dataset must contain 'text' and 'label' columns. Found: {df.columns.tolist()}")
 
+    # Remove any rows with missing text or label
+    df = df.dropna(subset=["text", "label"])
+    
     texts = df["text"].astype(str).tolist()
     labels = df["label"].astype(int).tolist()
+    
+    print(f"Loaded {len(texts)} samples with {len(set(labels))} unique labels")
 
     return texts, labels
 

@@ -5,7 +5,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 
 from src.utils.tokenizer import TextTokenizer
-from src.utils.helpers import load_data, save_tokenizer  # Changed load_dataset to load_data
+from src.utils.helpers import load_data, save_tokenizer
 from src.models.lstm_model import build_lstm_model
 from src.models.neural_net import build_neural_net
 
@@ -32,17 +32,16 @@ def prepare_data(texts, labels):
     """
     Tokenizes and converts text to padded sequences.
     """
-    # Initialize tokenizer
-    tokenizer = TextTokenizer(max_vocab=MAX_VOCAB)
+    # Initialize tokenizer with correct parameter name
+    tokenizer = TextTokenizer(max_vocab=MAX_VOCAB, max_len=MAX_LEN)
     
     # Fit tokenizer on texts
+    print("Fitting tokenizer on texts...")
     tokenizer.fit(texts)
     
     # Convert texts to sequences
-    encoded = tokenizer.texts_to_sequences(texts)
-    
-    # Pad sequences
-    padded = pad_sequences(encoded, maxlen=MAX_LEN, padding="post")
+    print("Converting texts to sequences...")
+    padded = tokenizer.texts_to_sequences(texts)
     
     # Save tokenizer
     save_tokenizer(tokenizer.word_index)
@@ -59,28 +58,42 @@ def prepare_data(texts, labels):
 # ---------------------------------------------------------
 
 def train():
-    print("Loading dataset...")
-    texts, labels = load_data()  # Changed from load_dataset to load_data
+    print("="*60)
+    print("STARTING TRAINING PROCESS")
+    print("="*60)
     
-    print(f"Dataset loaded: {len(texts)} samples")
+    print("\n[1/5] Loading dataset...")
+    texts, labels = load_data()
     
-    print("Preparing data...")
+    print(f"\n✓ Dataset loaded: {len(texts)} samples")
+    
+    print("\n[2/5] Preparing data (tokenizing and padding)...")
     X, y, num_classes = prepare_data(texts, labels)
     
+    print(f"\n✓ Data prepared:")
+    print(f"  - Input shape: {X.shape}")
+    print(f"  - Output shape: {y.shape}")
+    print(f"  - Number of classes: {num_classes}")
+    
     # Train/Val split
+    print("\n[3/5] Splitting into train/validation sets...")
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
     
-    print(f"Training samples: {len(X_train)}, Validation samples: {len(X_val)}")
-    print(f"Number of classes: {num_classes}")
+    print(f"  - Training samples: {len(X_train)}")
+    print(f"  - Validation samples: {len(X_val)}")
     
     # Train LSTM model
-    print("\n" + "="*50)
-    print("Training LSTM model...")
-    print("="*50)
+    print("\n" + "="*60)
+    print("[4/5] TRAINING LSTM MODEL")
+    print("="*60)
     lstm = build_lstm_model(MAX_VOCAB, EMBED_DIM, MAX_LEN, num_classes)
-    lstm.fit(
+    print("\nModel architecture:")
+    lstm.summary()
+    print("\nStarting training...")
+    
+    history_lstm = lstm.fit(
         X_train, y_train, 
         validation_data=(X_val, y_val), 
         epochs=EPOCHS, 
@@ -88,14 +101,18 @@ def train():
         verbose=1
     )
     lstm.save(f"{MODEL_DIR}/lstm_model.h5")
-    print(f"LSTM model saved to {MODEL_DIR}/lstm_model.h5")
+    print(f"\n✓ LSTM model saved to {MODEL_DIR}/lstm_model.h5")
     
     # Train Neural Net model
-    print("\n" + "="*50)
-    print("Training Neural Network model...")
-    print("="*50)
+    print("\n" + "="*60)
+    print("[5/5] TRAINING NEURAL NETWORK MODEL")
+    print("="*60)
     nn = build_neural_net(MAX_VOCAB, EMBED_DIM, MAX_LEN, num_classes)
-    nn.fit(
+    print("\nModel architecture:")
+    nn.summary()
+    print("\nStarting training...")
+    
+    history_nn = nn.fit(
         X_train, y_train, 
         validation_data=(X_val, y_val), 
         epochs=EPOCHS, 
@@ -103,11 +120,21 @@ def train():
         verbose=1
     )
     nn.save(f"{MODEL_DIR}/neural_net_model.h5")
-    print(f"Neural Net model saved to {MODEL_DIR}/neural_net_model.h5")
+    print(f"\n✓ Neural Net model saved to {MODEL_DIR}/neural_net_model.h5")
     
-    print("\n" + "="*50)
-    print("✓ Training completed! All models saved in /models/ folder.")
-    print("="*50)
+    # Final summary
+    print("\n" + "="*60)
+    print("✓ TRAINING COMPLETED SUCCESSFULLY!")
+    print("="*60)
+    print(f"\nFinal Results:")
+    print(f"  LSTM Model:")
+    print(f"    - Training Accuracy: {history_lstm.history['accuracy'][-1]:.4f}")
+    print(f"    - Validation Accuracy: {history_lstm.history['val_accuracy'][-1]:.4f}")
+    print(f"  Neural Net Model:")
+    print(f"    - Training Accuracy: {history_nn.history['accuracy'][-1]:.4f}")
+    print(f"    - Validation Accuracy: {history_nn.history['val_accuracy'][-1]:.4f}")
+    print(f"\nAll models saved in: {MODEL_DIR}/")
+    print("="*60)
 
 
 # ---------------------------------------------------------

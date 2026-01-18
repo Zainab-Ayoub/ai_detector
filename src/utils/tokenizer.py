@@ -7,14 +7,15 @@ from src.utils.helpers import clean_text
 
 
 class TextTokenizer:
-    def __init__(self, num_words=20000, max_len=300):
+    def __init__(self, max_vocab=20000, max_len=300):
         """
-        num_words = size of vocabulary
+        max_vocab = size of vocabulary (changed from num_words)
         max_len = maximum sequence length for padding
         """
-        self.num_words = num_words
+        self.max_vocab = max_vocab
         self.max_len = max_len
-        self.tokenizer = Tokenizer(num_words=num_words, oov_token="<OOV>")
+        self.tokenizer = Tokenizer(num_words=max_vocab, oov_token="<OOV>")
+        self.word_index = {}
 
     def fit(self, texts):
         """
@@ -22,6 +23,7 @@ class TextTokenizer:
         """
         cleaned = [clean_text(t) for t in texts]
         self.tokenizer.fit_on_texts(cleaned)
+        self.word_index = self.tokenizer.word_index
 
     def texts_to_sequences(self, texts):
         """
@@ -54,4 +56,5 @@ class TextTokenizer:
             data = json.load(f)
 
         self.tokenizer = tokenizer_from_json(data)
+        self.word_index = self.tokenizer.word_index
         print(f"Tokenizer loaded from {path}")

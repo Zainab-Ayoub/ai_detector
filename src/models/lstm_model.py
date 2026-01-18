@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 
 
-def build_lstm_model(vocab_size=30000, embedding_dim=128, max_length=500):
+def build_lstm_model(vocab_size, embedding_dim, max_length, num_classes):
     """
     LSTM-based classifier for AI vs Human text detection.
     
@@ -10,6 +10,7 @@ def build_lstm_model(vocab_size=30000, embedding_dim=128, max_length=500):
     - vocab_size: size of tokenizer vocabulary
     - embedding_dim: size of word embedding vectors
     - max_length: maximum sequence length (padding)
+    - num_classes: number of output classes
     """
 
     model = models.Sequential([
@@ -28,12 +29,12 @@ def build_lstm_model(vocab_size=30000, embedding_dim=128, max_length=500):
         layers.Dense(64, activation='relu'),
         layers.Dropout(0.2),
 
-        layers.Dense(1, activation='sigmoid')  # AI = 1, Human = 0
+        layers.Dense(num_classes, activation='softmax')
     ])
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
-        loss="binary_crossentropy",
+        loss="categorical_crossentropy",
         metrics=["accuracy"]
     )
 

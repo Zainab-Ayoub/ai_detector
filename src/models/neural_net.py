@@ -2,16 +2,25 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 
 
-def build_neural_net(input_dim):
+def build_neural_net(vocab_size, embedding_dim, max_length, num_classes):
     """
-    A simple but effective feed-forward neural network.
-    Works best with engineered features + n-grams.
-
-    input_dim = length of your final feature vector
+    A simple but effective feed-forward neural network with embeddings.
+    
+    Parameters:
+    - vocab_size: size of tokenizer vocabulary
+    - embedding_dim: size of word embedding vectors
+    - max_length: maximum sequence length (padding)
+    - num_classes: number of output classes
     """
 
     model = models.Sequential([
-        layers.Input(shape=(input_dim,)),
+        layers.Embedding(
+            input_dim=vocab_size,
+            output_dim=embedding_dim,
+            input_length=max_length
+        ),
+        
+        layers.GlobalAveragePooling1D(),
 
         layers.Dense(256, activation='relu'),
         layers.Dropout(0.3),
@@ -21,12 +30,12 @@ def build_neural_net(input_dim):
 
         layers.Dense(64, activation='relu'),
 
-        layers.Dense(1, activation='sigmoid')  # AI (1) vs Human (0)
+        layers.Dense(num_classes, activation='softmax')  # Multi-class classification
     ])
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
-        loss="binary_crossentropy",
+        loss="categorical_crossentropy",
         metrics=["accuracy"]
     )
 
