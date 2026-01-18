@@ -1,1 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
 .venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+notebooks/.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+._*
+
+# Models (large files)
+models/*.pkl
+models/*.h5
+models/*.keras
+*.pkl
+*.h5
+
+# Outputs
+outputs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Environment
+.env
