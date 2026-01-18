@@ -1,46 +1,58 @@
-import re
-import nltk
-from nltk.tokenize import word_tokenize
+import os
+import pandas as pd
 
-# Download tokenizer models on first use
-nltk.download("punkt", quiet=True)
+# Correct dataset path
+DATASET_PATH = "data/master_training_data.csv"
 
 
-def clean_text(text):
+def load_data():
     """
-    Basic cleaning for raw text:
-    - Convert to lowercase
-    - Remove URLs
-    - Remove special characters
-    - Remove extra spaces
-
-    This function is used before tokenization and model training.
+    Loads the cleaned + balanced dataset created earlier.
+    Returns (texts, labels)
     """
-    if not isinstance(text, str):
-        return ""
+    if not os.path.exists(DATASET_PATH):
+        raise FileNotFoundError(f"Dataset file not found: {DATASET_PATH}")
 
-    text = text.lower()
-    text = re.sub(r"http\S+|www\S+", "", text)       # Remove URLs
-    text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)  # Keep only simple characters
-    text = re.sub(r"\s+", " ", text).strip()         # Remove extra spaces
+    df = pd.read_csv(DATASET_PATH)
 
-    return text
+    if "text" not in df.columns or "label" not in df.columns:
+        raise ValueError("Dataset must contain 'text' and 'label' columns")
+
+    texts = df["text"].astype(str).tolist()
+    labels = df["label"].astype(int).tolist()
+
+    return texts, labels
 
 
-def tokenize(text):
+def split_dataset(texts, labels, test_size=0.2, seed=42):
     """
-    Word-level tokenization (ONLY for debugging/analysis).
-    Not used inside the main model pipeline.
+    Splits the dataset manually.
     """
-    cleaned = clean_text(text)
-    return word_tokenize(cleaned)
+    import numpy as np
+
+    np.random.seed(seed)
+    indices = np.random.permutation(len(texts))
+    split_point = int(len(texts) * (1 - test_size))
+
+    train_idx = indices[:split_point]
+    test_idx = indices[split_point:]
+
+    train_texts = [texts[i] for i in train_idx]
+    test_texts = [texts[i] for i in test_idx]
+    train_labels = [labels[i] for i in train_idx]
+    test_labels = [labels[i] for i in test_idx]
+
+    return train_texts, test_texts, train_labels, test_labels
 
 
-def sentence_split(text):
+def save_tokenizer(word_index, path="outputs/tokenizer.json"):
     """
-    Split text into sentences.
-    Useful for research/analysis, but not required for the model.
+    Saves the tokenizer dictionary.
     """
-    cleaned = clean_text(text)
-    sentences = re.split(r"[.!?]", cleaned)
-    return [s.strip() for s in sentences if s.strip()]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    import json
+    with open(path, "w") as f:
+        json.dump(word_index, f)
+
+    print(f"Tokenizer saved to {path}")
