@@ -1,33 +1,47 @@
-import torch
-import torch.nn as nn
-
-from tokenizer import CharTokenizer
-from helpers import load_model, generate_text
+import numpy as np
+from tensorflow.keras.models import load_model
 
 
-def main():
-    # Load tokenizer
-    tokenizer = CharTokenizer()
-    tokenizer.load("tokenizer.json")
+class EnsembleModel:
+    """
+    Loads multiple trained models and combines their predictions.
+    Uses simple averaging (soft voting).
+    """
 
-    # Load model
-    model = load_model("lstm_model.pt", vocab_size=tokenizer.vocab_size)
+    def __init__(self, model_paths):
+        """
+        model_paths: list of paths to trained model files (*.h5)
+        """
+        self.models = []
+        for path in model_paths:
+            print(f"Loading model: {path}")
+            self.models.append(load_model(path))
 
-    # Ask user for prompt
-    prompt = input("Enter a starting text: ")
+        print(f"Total models loaded: {len(self.models)}")
 
-    # Generate text
-    output = generate_text(
-        model=model,
-        tokenizer=tokenizer,
-        start_text=prompt,
-        length=300,
-        temperature=0.8
-    )
+    def predict(self, input_data):
+        """
+        Takes input_data (already preprocessed)
+        and returns the averaged prediction of all models.
+        """
+        predictions = []
 
-    print("\nGenerated text:\n")
-    print(output)
+        # collect predictions from all models
+        for model in self.models:
+            pred = model.predict(input_data, verbose=0)
+            predictions.append(pred)
 
+        # convert to numpy array
+        predictions = np.array(predictions)
 
-if __name__ == "__main__":
-    main()
+        # average over axis 0 (model axis)
+        avg_prediction = np.mean(predictions, axis=0)
+
+        return avg_prediction
+
+    def predict_class(self, input_data):
+        """
+        Returns the final class label after ensemble averaging.
+        """
+        avg_pred = self.predict(input_data)
+        return np.argmax(avg_pred, axis=1)
