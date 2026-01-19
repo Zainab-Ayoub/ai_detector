@@ -76,15 +76,15 @@ def get_detailed_prediction(text):
 def read_multiline_input():
     """
     Read multi-line input from the user.
-    End input with a blank line or a line containing only END.
+    End input with a line containing only END.
     """
-    print("Paste your text. End with a blank line or type END on its own line.")
+    print("Paste your text. End by typing END on its own line.")
     lines = []
     while True:
         line = input()
         if line.strip().lower() == "quit":
             return None
-        if line.strip() == "" or line.strip().upper() == "END":
+        if line.strip().upper() == "END":
             break
         lines.append(line)
     return "\n".join(lines).strip()
