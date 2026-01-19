@@ -9,3 +9,6 @@ datasets
 transformers
 tqdm
 keras
+flask
+pdfplumber
+python-docx

@@ -1,12 +1,46 @@
+import os
 import pickle
 from src.utils.helpers import clean_text
 
-# Load the trained model
-with open("models/logistic_model_full.pkl", "rb") as f:
-    model = pickle.load(f)
+# Model artifact locations
+MODEL_PATH = os.path.join("models", "logistic_model_full.pkl")
+VECTORIZER_PATH = os.path.join("models", "vectorizer_full.pkl")
 
-with open("models/vectorizer_full.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
+_model = None
+_vectorizer = None
+
+
+def _load_artifacts():
+    """
+    Lazy-load model artifacts to avoid import-time failures.
+    """
+    global _model, _vectorizer
+    if _model is not None and _vectorizer is not None:
+        return _model, _vectorizer
+
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(
+            f"Model file not found: {MODEL_PATH}. Train the model first."
+        )
+    if not os.path.exists(VECTORIZER_PATH):
+        raise FileNotFoundError(
+            f"Vectorizer file not found: {VECTORIZER_PATH}. Train the model first."
+        )
+
+    with open(MODEL_PATH, "rb") as f:
+        _model = pickle.load(f)
+    with open(VECTORIZER_PATH, "rb") as f:
+        _vectorizer = pickle.load(f)
+
+    return _model, _vectorizer
+
+
+def _append_warning(base, message):
+    if not message:
+        return base
+    if not base:
+        return message
+    return f"{base}\n{message}"
 
 
 # Confidence thresholds
@@ -20,6 +54,8 @@ def predict_text(text):
     Predict if text is AI-generated or Human-written
     Returns: prediction label, confidence score, and warning message
     """
+    model, vectorizer = _load_artifacts()
+
     # Clean the text
     cleaned = clean_text(text)
     word_count = len(cleaned.split())
@@ -39,15 +75,22 @@ def predict_text(text):
     
     # Check for short text
     if word_count < MIN_WORDS_FOR_ACCURACY:
-        warning = f"WARNING: Text is short ({word_count} words). Results may be unreliable. For best accuracy, use 50+ words."
+        warning = (
+            f"WARNING: Text is short ({word_count} words). "
+            "Results may be unreliable. For best accuracy, use 50+ words."
+        )
     
     # Check confidence level
     if confidence < LOW_CONFIDENCE_THRESHOLD:
         label = "UNCERTAIN"
-        warning = (warning or "") + "\nModel confidence is too low. This text needs human review."
+        warning = _append_warning(
+            warning, "Model confidence is too low. This text needs human review."
+        )
     elif confidence < HIGH_CONFIDENCE_THRESHOLD:
         label = "AI" if prediction == 1 else "Human"
-        warning = (warning or "") + "\nModerate confidence - consider reviewing manually."
+        warning = _append_warning(
+            warning, "Moderate confidence - consider reviewing manually."
+        )
     else:
         label = "AI" if prediction == 1 else "Human"
     

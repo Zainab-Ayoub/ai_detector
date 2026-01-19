@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Detector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-bg"></div>
+    <header class="site-header">
+      <nav class="nav">
+        <div class="logo">AI Detector</div>
+        <div class="nav-links">
+          <span>AI Detector</span>
+          <span>Advanced Scan</span>
+          <span>Integrations</span>
+          <span>Pricing</span>
+        </div>
+        <div class="nav-actions">
+          <button class="ghost-btn">Sign in</button>
+          <button class="nav-cta">Try now</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="hero-panel">
+        <p class="eyebrow">AI detector made to preserve what’s human</p>
+        <h1>Scan for AI writing in seconds.</h1>
+        <p class="hero-subtitle">
+          Paste text, upload a document, or bring content from Google Drive to
+          see AI likelihood, confidence, and review signals.
+        </p>
+        <div class="hero-actions">
+          <button class="primary-btn" id="start-scan-btn">Scan now</button>
+          <button class="secondary-btn" id="example-btn">Try an example</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <p class="stat-value">99%</p>
+            <p class="stat-label">Accuracy target</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-value">10M+</p>
+            <p class="stat-label">Texts analyzed</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-value">2s</p>
+            <p class="stat-label">Average scan</p>
+          </div>
+        </div>
+        <div class="hero-cta">
+          <span class="pill pill-soft">Privacy guarantee</span>
+          <p>We never store your text without permission.</p>
+        </div>
+      </section>
+
+      <section class="detector-panel">
+        <form id="detector-form" class="detector-form">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">AI detector</p>
+              <h2>Paste text or upload a file</h2>
+            </div>
+            <span class="pill" id="result-label">Awaiting input</span>
+          </div>
+
+          <div class="tab-row">
+            <button class="tab-btn active" type="button" data-tab="paste">
+              Paste text
+            </button>
+            <button class="tab-btn" type="button" data-tab="upload">
+              Upload file
+            </button>
+            <button class="tab-btn" type="button" data-tab="drive">
+              Google Drive
+            </button>
+          </div>
+
+          <div class="tab-panel active" data-panel="paste">
+            <label for="detector-input">Text to scan</label>
+            <textarea
+              id="detector-input"
+              placeholder="Paste your text here..."
+              rows="8"
+            ></textarea>
+            <div class="form-meta">
+              <span id="word-count">0 words</span>
+              <span id="char-count">0 characters</span>
+            </div>
+            <div class="input-actions">
+              <button class="ghost-btn" type="button" id="paste-btn">
+                Paste from clipboard
+              </button>
+              <button class="ghost-btn" type="button" id="clear-btn">
+                Clear text
+              </button>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-panel="upload">
+            <label class="ghost-btn">
+              Upload file
+              <input
+                id="file-input"
+                type="file"
+                accept=".pdf,.docx,.txt,.md,.csv,.json"
+              />
+            </label>
+            <div class="drop-zone" id="drop-zone">
+              <p>Drag & drop a file here</p>
+              <span>.pdf, .docx, .txt, .md, .csv, .json supported</span>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-panel="drive">
+            <div class="drive-panel">
+              <p>Connect your Google Drive to scan documents.</p>
+              <button class="ghost-btn" type="button" id="drive-btn">
+                Connect Google Drive
+              </button>
+              <p class="drive-note">
+                Requires OAuth configuration for your app.
+              </p>
+            </div>
+          </div>
+
+          <button type="submit" class="primary-btn scan-btn">
+            Scan
+          </button>
+          <p class="form-hint">
+            Tip: provide 50+ words for higher confidence.
+          </p>
+        </form>
+
+        <div class="result-panel">
+          <div class="result-score">
+            <p class="score-value" id="result-confidence">--%</p>
+            <p class="score-label">Confidence</p>
+          </div>
+          <div class="result-tags">
+            <span class="result-tag" id="result-tag-primary">AI</span>
+            <span class="result-tag muted">Human</span>
+            <span class="result-tag muted">Mixed</span>
+          </div>
+          <div class="result-bars">
+            <div>
+              <div class="bar-label">
+                <span>Human probability</span>
+                <span id="human-prob">--%</span>
+              </div>
+              <div class="bar">
+                <span id="human-bar" style="width: 0%"></span>
+              </div>
+            </div>
+            <div>
+              <div class="bar-label">
+                <span>AI probability</span>
+                <span id="ai-prob">--%</span>
+              </div>
+              <div class="bar">
+                <span id="ai-bar" style="width: 0%"></span>
+              </div>
+            </div>
+          </div>
+          <div class="result-insights">
+            <div>
+              <p class="insight-label">Words</p>
+              <p class="insight-value" id="result-words">--</p>
+            </div>
+            <div>
+              <p class="insight-label">Review</p>
+              <p class="insight-value" id="result-review">--</p>
+            </div>
+          </div>
+          <div class="result-notes" id="result-notes">
+            Connect the backend to view detailed results.
+          </div>
+        </div>
+      </section>
+
+      <section class="plans-panel">
+        <div>
+          <p class="eyebrow">Plans</p>
+          <h2>Simple, transparent pricing</h2>
+        </div>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <h3>Starter</h3>
+            <p class="price">$0</p>
+            <p class="price-sub">Local scans + demo UI</p>
+            <button class="secondary-btn">Get started</button>
+          </div>
+          <div class="price-card featured">
+            <h3>Pro</h3>
+            <p class="price">$19</p>
+            <p class="price-sub">Advanced insights + API</p>
+            <button class="primary-btn">Upgrade</button>
+          </div>
+          <div class="price-card">
+            <h3>Enterprise</h3>
+            <p class="price">Custom</p>
+            <p class="price-sub">SLAs, privacy, on-prem</p>
+            <button class="secondary-btn">Contact sales</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
