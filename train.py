@@ -29,17 +29,17 @@ def train():
     print("\n[1/4] Loading dataset...")
     texts, labels = load_data()
     
-    print(f"✓ Dataset loaded: {len(texts)} samples")
+    print(f"[OK] Dataset loaded: {len(texts)} samples")
     
     print("\n[2/4] Cleaning texts...")
     texts_clean = [clean_text(t) for t in texts]
-    print("✓ Texts cleaned")
+    print("[OK] Texts cleaned")
     
     print("\n[3/4] Converting to TF-IDF features...")
     print("  This may take 1-2 minutes...")
     vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 3))
     X = vectorizer.fit_transform(texts_clean)
-    print(f"✓ Features created: {X.shape}")
+    print(f"[OK] Features created: {X.shape}")
     
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
@@ -53,7 +53,7 @@ def train():
     print("  This may take 2-3 minutes...")
     model = LogisticRegression(max_iter=1000, random_state=42, n_jobs=-1)
     model.fit(X_train, y_train)
-    print("✓ Model trained!")
+    print("[OK] Model trained!")
     
     # Evaluate
     print("\nEvaluating model...")
@@ -64,7 +64,7 @@ def train():
     test_accuracy = accuracy_score(y_test, y_pred_test)
     
     print("\n" + "="*60)
-    print("✓ TRAINING COMPLETED SUCCESSFULLY!")
+    print("[OK] TRAINING COMPLETED SUCCESSFULLY!")
     print("="*60)
     print(f"\nResults:")
     print(f"  - Total samples: {len(texts)}")
@@ -83,8 +83,8 @@ def train():
     with open(f"{MODEL_DIR}/vectorizer_full.pkl", "wb") as f:
         pickle.dump(vectorizer, f)
     
-    print(f"✓ Model saved to {MODEL_DIR}/logistic_model_full.pkl")
-    print(f"✓ Vectorizer saved to {MODEL_DIR}/vectorizer_full.pkl")
+    print(f"[OK] Model saved to {MODEL_DIR}/logistic_model_full.pkl")
+    print(f"[OK] Vectorizer saved to {MODEL_DIR}/vectorizer_full.pkl")
     print("\n" + "="*60)
     print("PRODUCTION MODEL READY!")
     print("="*60)

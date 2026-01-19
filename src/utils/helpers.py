@@ -6,6 +6,15 @@ import pandas as pd
 DATASET_PATH = "data/master_training_data.csv"
 
 
+def sentence_split(text):
+    """
+    Split text into sentences using punctuation markers.
+    This is needed by feature_engineering.py
+    """
+    sentences = re.split(r'(?<=[.!?])\s+', str(text).strip())
+    return [s.strip() for s in sentences if s.strip()]
+
+
 def clean_text(text):
     """
     Basic text cleaning function.
