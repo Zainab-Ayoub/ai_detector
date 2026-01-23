@@ -11,10 +11,6 @@ MAX_LEN = 100
 MODEL_DIR = "models"
 
 
-# ---------------------------------------------------------
-# Convert texts → numeric sequences for model
-# ---------------------------------------------------------
-
 def encode_texts(texts, word_index):
     encoded = []
     for t in texts:
@@ -22,10 +18,6 @@ def encode_texts(texts, word_index):
         encoded.append([word_index.get(w, 0) for w in tokens])
     return pad_sequences(encoded, maxlen=MAX_LEN, padding="post")
 
-
-# ---------------------------------------------------------
-# Majority Voting Ensemble
-# ---------------------------------------------------------
 
 def ensemble_predict(preds):
     """
@@ -43,10 +35,6 @@ def ensemble_predict(preds):
     return np.array(final)
 
 
-# ---------------------------------------------------------
-# Evaluation Metrics
-# ---------------------------------------------------------
-
 def print_metrics(y_true, y_pred, name):
     print(f"\n🔹 {name} Metrics")
     print("--------------------------------")
@@ -55,10 +43,6 @@ def print_metrics(y_true, y_pred, name):
     print("Recall   :", recall_score(y_true, y_pred, average="weighted"))
     print("F1 Score :", f1_score(y_true, y_pred, average="weighted"))
 
-
-# ---------------------------------------------------------
-# Main Evaluation Function
-# ---------------------------------------------------------
 
 def evaluate():
     print("Loading dataset...")
@@ -73,17 +57,12 @@ def evaluate():
     X = encode_texts(texts, word_index)
     y_true = np.array(labels)
 
-    # ----------------------------------
-    # Load models
-    # ----------------------------------
     print("Loading models...")
     lstm = load_model(f"{MODEL_DIR}/lstm_model.h5")
     gru = load_model(f"{MODEL_DIR}/gru_model.h5")
     cnn = load_model(f"{MODEL_DIR}/cnn_model.h5")
 
-    # ----------------------------------
-    # Individual predictions
-    # ----------------------------------
+ 
     print("Running predictions...")
 
     lstm_pred = lstm.predict(X, verbose=0)
@@ -94,16 +73,10 @@ def evaluate():
     gru_labels  = np.argmax(gru_pred, axis=1)
     cnn_labels  = np.argmax(cnn_pred, axis=1)
 
-    # ----------------------------------
-    # Print individual model metrics
-    # ----------------------------------
     print_metrics(y_true, lstm_labels, "LSTM")
     print_metrics(y_true, gru_labels, "GRU")
     print_metrics(y_true, cnn_labels, "CNN")
 
-    # ----------------------------------
-    # Ensemble prediction
-    # ----------------------------------
     print("\n🔮 Running Ensemble (Majority Vote)...")
     final_pred = ensemble_predict([lstm_pred, gru_pred, cnn_pred])
 
@@ -112,6 +85,5 @@ def evaluate():
     print("\n🎉 Evaluation completed!")
 
 
-# ---------------------------------------------------------
 if __name__ == "__main__":
     evaluate()

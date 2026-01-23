@@ -9,17 +9,10 @@ import pickle
 from src.utils.helpers import load_data, clean_text
 
 
-# ---------------------------------------------------------
-# CONFIGURATION - FULL TRAINING
-# ---------------------------------------------------------
-
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 
-# ---------------------------------------------------------
-# TRAINING WITH FULL DATASET
-# ---------------------------------------------------------
 
 def train():
     print("="*60)
