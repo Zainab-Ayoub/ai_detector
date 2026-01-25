@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.pipeline import FeatureUnion
 from sklearn.metrics import accuracy_score, classification_report
 import pickle
 
@@ -30,13 +32,28 @@ def train():
     
     print("\n[3/4] Converting to TF-IDF features...")
     print("  This may take 1-2 minutes...")
-    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 3))
+    word_vectorizer = TfidfVectorizer(
+        max_features=15000,
+        ngram_range=(1, 3),
+        analyzer="word",
+    )
+    char_vectorizer = TfidfVectorizer(
+        max_features=20000,
+        ngram_range=(3, 5),
+        analyzer="char_wb",
+    )
+    vectorizer = FeatureUnion(
+        [
+            ("word_tfidf", word_vectorizer),
+            ("char_tfidf", char_vectorizer),
+        ]
+    )
     X = vectorizer.fit_transform(texts_clean)
     print(f"[OK] Features created: {X.shape}")
     
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, labels, test_size=0.2, random_state=42
+        X, labels, test_size=0.2, random_state=42, stratify=labels
     )
     
     print(f"  - Training samples: {len(y_train)}")
@@ -44,9 +61,12 @@ def train():
     
     print("\n[4/4] Training Logistic Regression model...")
     print("  This may take 2-3 minutes...")
-    model = LogisticRegression(max_iter=1000, random_state=42, n_jobs=-1)
+    base_model = LogisticRegression(
+        max_iter=2000, random_state=42, n_jobs=-1, class_weight="balanced"
+    )
+    model = CalibratedClassifierCV(base_model, method="sigmoid", cv=3)
     model.fit(X_train, y_train)
-    print("[OK] Model trained!")
+    print("[OK] Model trained and calibrated!")
     
     # Evaluate
     print("\nEvaluating model...")
