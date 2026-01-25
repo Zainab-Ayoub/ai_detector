@@ -14,74 +14,47 @@
   </head>
   <body>
     <div class="page-bg"></div>
-    <header class="site-header">
-      <nav class="nav">
-        <div class="logo">AI Detector</div>
-        <div class="nav-links">
-          <span>AI Detector</span>
-          <span>Advanced Scan</span>
-          <span>Integrations</span>
-          <span>Pricing</span>
-        </div>
-        <div class="nav-actions">
-          <button class="ghost-btn">Sign in</button>
-          <button class="nav-cta">Try now</button>
-        </div>
-      </nav>
+    <header class="app-header">
+      <div class="logo">AI Detector</div>
+      <div class="header-actions">
+        <button class="ghost-btn" id="theme-toggle">Light mode</button>
+      </div>
     </header>
 
-    <main class="page">
-      <section class="hero-panel">
-        <p class="eyebrow">AI detector made to preserve what’s human</p>
-        <h1>Scan for AI writing in seconds.</h1>
-        <p class="hero-subtitle">
-          Paste text, upload a document, or bring content from Google Drive to
-          see AI likelihood, confidence, and review signals.
-        </p>
-        <div class="hero-actions">
-          <button class="primary-btn" id="start-scan-btn">Scan now</button>
-          <button class="secondary-btn" id="example-btn">Try an example</button>
+    <main class="workspace">
+      <section class="pane pane-left">
+        <div class="pane-header">
+          <h1>Scan for AI writing.</h1>
+          <p class="card-subtitle">
+            Paste text, upload a document, or connect Google Drive to evaluate
+            authenticity with confidence and review guidance.
+          </p>
         </div>
-        <div class="hero-stats">
-          <div class="stat-card">
-            <p class="stat-value">99%</p>
-            <p class="stat-label">Accuracy target</p>
-          </div>
-          <div class="stat-card">
-            <p class="stat-value">10M+</p>
-            <p class="stat-label">Texts analyzed</p>
-          </div>
-          <div class="stat-card">
-            <p class="stat-value">2s</p>
-            <p class="stat-label">Average scan</p>
-          </div>
-        </div>
-        <div class="hero-cta">
-          <span class="pill pill-soft">Privacy guarantee</span>
-          <p>We never store your text without permission.</p>
-        </div>
-      </section>
 
-      <section class="detector-panel">
         <form id="detector-form" class="detector-form">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">AI detector</p>
-              <h2>Paste text or upload a file</h2>
+          <div class="toolbar">
+            <div class="tab-row">
+              <button class="tab-btn active" type="button" data-tab="paste">
+                Editor
+              </button>
+              <button class="tab-btn" type="button" data-tab="upload">
+                Upload
+              </button>
+              <button class="tab-btn" type="button" data-tab="drive">
+                Drive
+              </button>
             </div>
-            <span class="pill" id="result-label">Awaiting input</span>
-          </div>
-
-          <div class="tab-row">
-            <button class="tab-btn active" type="button" data-tab="paste">
-              Paste text
-            </button>
-            <button class="tab-btn" type="button" data-tab="upload">
-              Upload file
-            </button>
-            <button class="tab-btn" type="button" data-tab="drive">
-              Google Drive
-            </button>
+            <div class="toolbar-actions">
+              <button class="ghost-btn" type="button" id="new-scan-btn">
+                + New scan
+              </button>
+              <button class="ghost-btn" type="button" id="example-btn">
+                Try an example
+              </button>
+              <button class="primary-btn" type="submit" id="start-scan-btn">
+                Scan
+              </button>
+            </div>
           </div>
 
           <div class="tab-panel active" data-panel="paste">
@@ -89,7 +62,7 @@
             <textarea
               id="detector-input"
               placeholder="Paste your text here..."
-              rows="8"
+              rows="10"
             ></textarea>
             <div class="form-meta">
               <span id="word-count">0 words</span>
@@ -132,23 +105,47 @@
             </div>
           </div>
 
-          <button type="submit" class="primary-btn scan-btn">
-            Scan
-          </button>
           <p class="form-hint">
             Tip: provide 50+ words for higher confidence.
           </p>
         </form>
 
+        <div class="result-highlights" id="result-highlights"></div>
+        <div class="highlight-legend">
+          <span class="legend-item">
+            <span class="legend-swatch legend-ai"></span>
+            Likely AI
+          </span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-mixed"></span>
+            Mixed/uncertain
+          </span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-human"></span>
+            Likely human
+          </span>
+        </div>
+      </section>
+
+      <section class="pane pane-right">
+        <div class="panel-header">
+          <div>
+            <h2>Result summary</h2>
+          </div>
+          <span class="pill" id="result-label">Awaiting input</span>
+        </div>
+
         <div class="result-panel">
           <div class="result-score">
-            <p class="score-value" id="result-confidence">--%</p>
+            <div class="score-ring" id="score-ring" style="--score: 0%">
+              <span class="score-value" id="result-confidence">--%</span>
+            </div>
             <p class="score-label">Confidence</p>
           </div>
           <div class="result-tags">
-            <span class="result-tag" id="result-tag-primary">AI</span>
-            <span class="result-tag muted">Human</span>
-            <span class="result-tag muted">Mixed</span>
+            <span class="result-tag" id="result-tag-ai">AI</span>
+            <span class="result-tag" id="result-tag-human">Human</span>
+            <span class="result-tag" id="result-tag-mixed">Mixed</span>
           </div>
           <div class="result-bars">
             <div>
@@ -175,41 +172,8 @@
               <p class="insight-label">Words</p>
               <p class="insight-value" id="result-words">--</p>
             </div>
-            <div>
-              <p class="insight-label">Review</p>
-              <p class="insight-value" id="result-review">--</p>
-            </div>
           </div>
-          <div class="result-notes" id="result-notes">
-            Connect the backend to view detailed results.
-          </div>
-        </div>
-      </section>
-
-      <section class="plans-panel">
-        <div>
-          <p class="eyebrow">Plans</p>
-          <h2>Simple, transparent pricing</h2>
-        </div>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <h3>Starter</h3>
-            <p class="price">$0</p>
-            <p class="price-sub">Local scans + demo UI</p>
-            <button class="secondary-btn">Get started</button>
-          </div>
-          <div class="price-card featured">
-            <h3>Pro</h3>
-            <p class="price">$19</p>
-            <p class="price-sub">Advanced insights + API</p>
-            <button class="primary-btn">Upgrade</button>
-          </div>
-          <div class="price-card">
-            <h3>Enterprise</h3>
-            <p class="price">Custom</p>
-            <p class="price-sub">SLAs, privacy, on-prem</p>
-            <button class="secondary-btn">Contact sales</button>
-          </div>
+          <div class="result-notes is-hidden" id="result-notes"></div>
         </div>
       </section>
     </main>

@@ -10,6 +10,8 @@ const aiProb = document.getElementById("ai-prob");
 const humanBar = document.getElementById("human-bar");
 const aiBar = document.getElementById("ai-bar");
 const resultNotes = document.getElementById("result-notes");
+const scoreRing = document.getElementById("score-ring");
+const resultHighlights = document.getElementById("result-highlights");
 const pasteBtn = document.getElementById("paste-btn");
 const clearBtn = document.getElementById("clear-btn");
 const fileInput = document.getElementById("file-input");
@@ -17,9 +19,12 @@ const dropZone = document.getElementById("drop-zone");
 const driveBtn = document.getElementById("drive-btn");
 const startScanBtn = document.getElementById("start-scan-btn");
 const exampleBtn = document.getElementById("example-btn");
-const resultTagPrimary = document.getElementById("result-tag-primary");
+const newScanBtn = document.getElementById("new-scan-btn");
+const themeToggle = document.getElementById("theme-toggle");
+const resultTagAi = document.getElementById("result-tag-ai");
+const resultTagHuman = document.getElementById("result-tag-human");
+const resultTagMixed = document.getElementById("result-tag-mixed");
 const resultWords = document.getElementById("result-words");
-const resultReview = document.getElementById("result-review");
 const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 
@@ -42,20 +47,86 @@ const setResult = (label, confidence, human, ai, note, words, review) => {
   aiProb.textContent = ai;
   humanBar.style.width = human;
   aiBar.style.width = ai;
-  resultNotes.textContent = note;
-  if (resultTagPrimary) {
-    resultTagPrimary.textContent = label;
+  if (scoreRing) {
+    scoreRing.style.setProperty("--score", confidence);
+  }
+  if (resultNotes) {
+    if (note) {
+      resultNotes.textContent = note;
+      resultNotes.classList.remove("is-hidden");
+    } else {
+      resultNotes.textContent = "";
+      resultNotes.classList.add("is-hidden");
+    }
+  }
+  if (resultTagAi && resultTagHuman && resultTagMixed) {
+    resultTagAi.classList.toggle("active", label === "AI");
+    resultTagHuman.classList.toggle("active", label === "Human");
+    resultTagMixed.classList.toggle("active", label === "UNCERTAIN");
   }
   if (resultWords) {
     resultWords.textContent = words ?? "--";
   }
-  if (resultReview) {
-    resultReview.textContent = review ?? "--";
-  }
 };
 
-const runPrediction = async (text) => {
-  const response = await fetch("/api/predict", {
+const resetScanState = () => {
+  setText("");
+  setResult(
+    "Awaiting input",
+    "--%",
+    "--%",
+    "--%",
+    "",
+    "--",
+    "--"
+  );
+  if (resultHighlights) {
+    resultHighlights.innerHTML = "";
+  }
+  if (dropZone) {
+    dropZone.classList.remove("is-hidden");
+  }
+  setActiveTab("paste");
+};
+
+const escapeHtml = (value) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const buildHighlights = (text, sentences) => {
+  const chunks = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
+  let idx = 0;
+
+  return chunks
+    .map((chunk) => {
+      if (!/\w/.test(chunk)) {
+        return escapeHtml(chunk);
+      }
+
+      const sentence = sentences[idx];
+      if (sentence) {
+        idx += 1;
+        const aiProb = Number(sentence.ai_probability || 0);
+        const cls =
+          aiProb >= 60
+            ? "highlight-ai"
+            : aiProb <= 40
+            ? "highlight-human"
+            : "highlight-mixed";
+        return `<span class="${cls}">${escapeHtml(chunk)}</span>`;
+      }
+
+      return `<span class="highlight-mixed">${escapeHtml(chunk)}</span>`;
+    })
+    .join("");
+};
+
+const runAnalysis = async (text) => {
+  const response = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -90,6 +161,14 @@ tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setActiveTab(button.dataset.tab);
   });
+});
+
+document.addEventListener("dragover", (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener("drop", (event) => {
+  event.preventDefault();
 });
 
 pasteBtn.addEventListener("click", async () => {
@@ -134,6 +213,12 @@ clearBtn.addEventListener("click", () => {
     "--",
     "--"
   );
+  if (resultHighlights) {
+    resultHighlights.textContent = "Highlights will appear after scanning.";
+  }
+  if (dropZone) {
+    dropZone.classList.remove("is-hidden");
+  }
 });
 
 exampleBtn.addEventListener("click", () => {
@@ -144,6 +229,17 @@ exampleBtn.addEventListener("click", () => {
     "consistent narrative flow to simulate a human-written paragraph.";
   setText(sample);
   setActiveTab("paste");
+});
+
+newScanBtn.addEventListener("click", () => {
+  resetScanState();
+});
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  themeToggle.textContent = document.body.classList.contains("dark")
+    ? "Dark mode"
+    : "Light mode";
 });
 
 const extractFileText = async (file) => {
@@ -172,6 +268,10 @@ const readFileToInput = async (file) => {
   try {
     const text = await extractFileText(file);
     setText(text);
+    setActiveTab("upload");
+    if (resultHighlights) {
+      resultHighlights.innerHTML = "";
+    }
   } catch (error) {
     setResult(
       "File error",
@@ -204,6 +304,18 @@ dropZone.addEventListener("drop", (event) => {
   event.preventDefault();
   dropZone.classList.remove("dragover");
   const file = event.dataTransfer.files?.[0];
+  if (!file) {
+    setResult(
+      "File error",
+      "--%",
+      "--%",
+      "--%",
+      "No file detected. Try dropping a file again.",
+      "--",
+      "--"
+    );
+    return;
+  }
   readFileToInput(file);
   setActiveTab("upload");
 });
@@ -241,19 +353,31 @@ form.addEventListener("submit", async (event) => {
   setResult("Scanning", "--%", "--%", "--%", "Running analysis...", "--", "--");
 
   try {
-    const result = await runPrediction(text);
-    const label = result.prediction || "Unknown";
-    const confidence = `${result.confidence.toFixed(1)}%`;
-    const human = `${result.human_probability.toFixed(1)}%`;
-    const ai = `${result.ai_probability.toFixed(1)}%`;
-    const note = result.warning
-      ? result.warning
-      : result.needs_review
+    const analysis = await runAnalysis(text);
+    const overall = analysis.overall || {};
+    const label = overall.prediction || "Unknown";
+    const confidence = `${Number(overall.confidence || 0).toFixed(1)}%`;
+    const human = `${Number(overall.human_probability || 0).toFixed(1)}%`;
+    const ai = `${Number(overall.ai_probability || 0).toFixed(1)}%`;
+    const note = overall.warning
+      ? overall.warning
+      : overall.needs_review
       ? "Moderate confidence. Consider manual review."
       : "Result looks confident. No additional review needed.";
-    const review = result.needs_review ? "Review" : "Clear";
+    const review = overall.needs_review ? "Review" : "Clear";
 
-    setResult(label, confidence, human, ai, note, result.word_count, review);
+    setResult(label, confidence, human, ai, note, overall.word_count, review);
+
+    if (resultHighlights) {
+      const sentences = analysis.sentences || [];
+      const html = buildHighlights(text, sentences);
+      resultHighlights.innerHTML = html || "No highlights available.";
+    }
+
+    if (dropZone) {
+      dropZone.classList.add("is-hidden");
+    }
+
   } catch (error) {
     setResult(
       "Offline",
