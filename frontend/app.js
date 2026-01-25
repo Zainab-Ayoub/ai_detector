@@ -28,6 +28,8 @@ const resultWords = document.getElementById("result-words");
 const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 
+let isExtracting = false;
+
 const updateCounts = () => {
   const text = input.value.trim();
   const words = text ? text.split(/\s+/).length : 0;
@@ -264,6 +266,11 @@ const extractFileText = async (file) => {
 const readFileToInput = async (file) => {
   if (!file) return;
   setResult("Extracting", "--%", "--%", "--%", "Reading file...", "--", "--");
+  isExtracting = true;
+  if (startScanBtn) {
+    startScanBtn.disabled = true;
+    startScanBtn.textContent = "Extracting...";
+  }
 
   try {
     const text = await extractFileText(file);
@@ -282,6 +289,12 @@ const readFileToInput = async (file) => {
       "--",
       "--"
     );
+  } finally {
+    isExtracting = false;
+    if (startScanBtn) {
+      startScanBtn.disabled = false;
+      startScanBtn.textContent = "Scan";
+    }
   }
 };
 
@@ -336,6 +349,19 @@ driveBtn.addEventListener("click", () => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = input.value.trim();
+
+  if (isExtracting) {
+    setResult(
+      "Extracting",
+      "--%",
+      "--%",
+      "--%",
+      "Please wait for the file to finish extracting.",
+      "--",
+      "--"
+    );
+    return;
+  }
 
   if (text.length < 10) {
     setResult(
