@@ -492,6 +492,210 @@ body {
   border-color: rgba(34, 197, 94, 0.45);
 }
 
+/* ======================================== */
+/* Google Drive Modal Styles */
+/* ======================================== */
+
+.drive-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.drive-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drive-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drive-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.drive-modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #6b7280;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.drive-modal-close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.drive-modal-body {
+  padding: 24px;
+}
+
+.drive-modal-body p {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-size: 14px;
+}
+
+.drive-modal-body input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s;
+}
+
+.drive-modal-body input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.drive-help {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  margin-top: 8px !important;
+}
+
+.drive-help strong {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.drive-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.drive-modal-cancel {
+  padding: 8px 16px;
+}
+
+.drive-modal-select {
+  padding: 8px 20px;
+}
+
+/* Connected state for Drive button */
+.ghost-btn.connected {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.ghost-btn.connected:hover {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
+/* Dark mode support for Drive modal */
+body.dark .drive-modal-content {
+  background: #1f2937;
+}
+
+body.dark .drive-modal-header {
+  border-bottom-color: #374151;
+}
+
+body.dark .drive-modal-header h3 {
+  color: #f9fafb;
+}
+
+body.dark .drive-modal-close {
+  color: #9ca3af;
+}
+
+body.dark .drive-modal-close:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+body.dark .drive-modal-body p {
+  color: #d1d5db;
+}
+
+body.dark .drive-modal-body input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark .drive-modal-body input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+body.dark .drive-help {
+  color: #9ca3af !important;
+}
+
+body.dark .drive-help strong {
+  color: #60a5fa;
+}
+
+body.dark .drive-modal-footer {
+  border-top-color: #374151;
+}
+
+body.dark .ghost-btn.connected {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #047857;
+}
+
+body.dark .ghost-btn.connected:hover {
+  background: #065f46;
+  border-color: #059669;
+}
+
+/* ======================================== */
+/* Responsive Design */
+/* ======================================== */
+
 @media (max-width: 980px) {
   body {
     overflow: auto;
@@ -509,5 +713,10 @@ body {
 
   .field-row {
     grid-template-columns: 1fr;
+  }
+  
+  .drive-modal-content {
+    width: 95%;
+    max-width: none;
   }
 }

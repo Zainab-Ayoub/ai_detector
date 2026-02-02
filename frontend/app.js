@@ -1,4 +1,3 @@
-
 const form = document.getElementById("detector-form");
 const input = document.getElementById("detector-input");
 const wordCount = document.getElementById("word-count");
@@ -29,6 +28,37 @@ const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 
 let isExtracting = false;
+let isDriveAuthenticated = false;
+let gapi = null;
+let tokenClient = null;
+
+// Google API Configuration - You'll need to add your own API Key and Client ID
+const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY';  // Get from Google Cloud Console
+const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';  // Get from Google Cloud Console
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+// Check Drive authentication status on load
+async function checkDriveStatus() {
+  try {
+    const response = await fetch('/api/drive/status');
+    const data = await response.json();
+    isDriveAuthenticated = data.authenticated;
+    updateDriveButton();
+  } catch (error) {
+    console.error('Failed to check Drive status:', error);
+  }
+}
+
+function updateDriveButton() {
+  if (isDriveAuthenticated) {
+    driveBtn.textContent = '✓ Connected - Pick a file';
+    driveBtn.classList.add('connected');
+  } else {
+    driveBtn.textContent = 'Connect Google Drive';
+    driveBtn.classList.remove('connected');
+  }
+}
 
 const updateCounts = () => {
   const text = input.value.trim();
@@ -333,17 +363,274 @@ dropZone.addEventListener("drop", (event) => {
   setActiveTab("upload");
 });
 
-driveBtn.addEventListener("click", () => {
-  setResult(
-    "Google Drive",
-    "--%",
-    "--%",
-    "--%",
-    "Google Drive picker requires OAuth setup. Add your API keys to enable it.",
-    "--",
-    "--"
-  );
-  setActiveTab("drive");
+// Google Drive Authentication and File Picker
+async function authenticateDrive() {
+  try {
+    setResult(
+      "Connecting",
+      "--%",
+      "--%",
+      "--%",
+      "Opening Google authentication...",
+      "--",
+      "--"
+    );
+
+    const response = await fetch('/api/drive/auth');
+    const data = await response.json();
+
+    if (data.error) {
+      setResult(
+        "Auth Error",
+        "--%",
+        "--%",
+        "--%",
+        data.error,
+        "--",
+        "--"
+      );
+      return false;
+    }
+
+    // Open OAuth popup
+    const authWindow = window.open(
+      data.auth_url,
+      'Google Drive Authentication',
+      'width=600,height=700'
+    );
+
+    // Listen for authentication success
+    return new Promise((resolve) => {
+      const messageHandler = (event) => {
+        if (event.data.type === 'drive-auth-success') {
+          window.removeEventListener('message', messageHandler);
+          isDriveAuthenticated = true;
+          updateDriveButton();
+          setResult(
+            "Connected",
+            "--%",
+            "--%",
+            "--%",
+            "Successfully connected to Google Drive! Now pick a file.",
+            "--",
+            "--"
+          );
+          resolve(true);
+        }
+      };
+      window.addEventListener('message', messageHandler);
+
+      // Check if popup was closed without completing auth
+      const checkClosed = setInterval(() => {
+        if (authWindow && authWindow.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', messageHandler);
+          if (!isDriveAuthenticated) {
+            setResult(
+              "Auth Cancelled",
+              "--%",
+              "--%",
+              "--%",
+              "Authentication was cancelled.",
+              "--",
+              "--"
+            );
+          }
+          resolve(false);
+        }
+      }, 1000);
+    });
+  } catch (error) {
+    setResult(
+      "Connection Error",
+      "--%",
+      "--%",
+      "--%",
+      `Failed to connect: ${error.message}`,
+      "--",
+      "--"
+    );
+    return false;
+  }
+}
+
+// Load Google Picker API
+function loadGooglePicker() {
+  if (window.google && window.google.picker) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.onload = () => {
+      gapi = window.gapi;
+      gapi.load('picker', () => {
+        resolve();
+      });
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+async function showDrivePicker() {
+  try {
+    await loadGooglePicker();
+    
+    // Note: For the picker to work, you need to use the Google Picker API
+    // which requires an API key. For simplicity, we'll use a file selection approach
+    
+    // Create a simple file selector using Google Drive API
+    setResult(
+      "Loading Drive",
+      "--%",
+      "--%",
+      "--%",
+      "Loading your Google Drive files...",
+      "--",
+      "--"
+    );
+
+    // Show a modal with file selection
+    showDriveFileModal();
+    
+  } catch (error) {
+    setResult(
+      "Picker Error",
+      "--%",
+      "--%",
+      "--%",
+      `Failed to load Drive picker: ${error.message}`,
+      "--",
+      "--"
+    );
+  }
+}
+
+function showDriveFileModal() {
+  // Create a simple modal for file selection
+  const modal = document.createElement('div');
+  modal.className = 'drive-modal';
+  modal.innerHTML = `
+    <div class="drive-modal-content">
+      <div class="drive-modal-header">
+        <h3>Select a file from Google Drive</h3>
+        <button class="drive-modal-close">&times;</button>
+      </div>
+      <div class="drive-modal-body">
+        <p>Enter the Google Drive File ID:</p>
+        <input type="text" id="drive-file-id" placeholder="e.g., 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" />
+        <p class="drive-help">To get the file ID, open the file in Google Drive and copy the ID from the URL.</p>
+        <p class="drive-help">Example: https://docs.google.com/document/d/<strong>FILE_ID_HERE</strong>/edit</p>
+      </div>
+      <div class="drive-modal-footer">
+        <button class="ghost-btn drive-modal-cancel">Cancel</button>
+        <button class="primary-btn drive-modal-select">Load File</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  const fileIdInput = modal.querySelector('#drive-file-id');
+  const closeBtn = modal.querySelector('.drive-modal-close');
+  const cancelBtn = modal.querySelector('.drive-modal-cancel');
+  const selectBtn = modal.querySelector('.drive-modal-select');
+  
+  const closeModal = () => {
+    document.body.removeChild(modal);
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  
+  selectBtn.addEventListener('click', async () => {
+    const fileId = fileIdInput.value.trim();
+    if (!fileId) {
+      alert('Please enter a file ID');
+      return;
+    }
+    
+    closeModal();
+    await downloadDriveFile(fileId);
+  });
+  
+  fileIdInput.focus();
+}
+
+async function downloadDriveFile(fileId) {
+  try {
+    setResult(
+      "Downloading",
+      "--%",
+      "--%",
+      "--%",
+      "Downloading file from Google Drive...",
+      "--",
+      "--"
+    );
+    
+    isExtracting = true;
+    if (startScanBtn) {
+      startScanBtn.disabled = true;
+      startScanBtn.textContent = "Downloading...";
+    }
+
+    const response = await fetch('/api/drive/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_id: fileId })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to download file');
+    }
+
+    const data = await response.json();
+    setText(data.text);
+    
+    setResult(
+      "Ready",
+      "--%",
+      "--%",
+      "--%",
+      `File "${data.filename}" loaded successfully! Click Scan to analyze.`,
+      "--",
+      "--"
+    );
+    
+    setActiveTab("paste");
+    
+  } catch (error) {
+    setResult(
+      "Download Error",
+      "--%",
+      "--%",
+      "--%",
+      error.message || "Failed to download file from Drive.",
+      "--",
+      "--"
+    );
+  } finally {
+    isExtracting = false;
+    if (startScanBtn) {
+      startScanBtn.disabled = false;
+      startScanBtn.textContent = "Scan";
+    }
+  }
+}
+
+driveBtn.addEventListener("click", async () => {
+  if (!isDriveAuthenticated) {
+    const authenticated = await authenticateDrive();
+    if (authenticated) {
+      await showDrivePicker();
+    }
+  } else {
+    await showDrivePicker();
+  }
 });
 
 form.addEventListener("submit", async (event) => {
@@ -416,3 +703,6 @@ form.addEventListener("submit", async (event) => {
     );
   }
 });
+
+// Check Drive authentication status on page load
+checkDriveStatus();
