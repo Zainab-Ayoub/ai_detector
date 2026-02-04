@@ -13,10 +13,6 @@ class FeatureEngineer:
         self.ngram_extractor = NgramExtractor(max_features=ngram_max_features)
         self.fitted = False
 
-    # ------------------------------------------------------
-    # Fit on training data
-    # ------------------------------------------------------
-
     def fit(self, texts):
         """
         Fit n-gram vocabularies on training dataset.
@@ -24,9 +20,6 @@ class FeatureEngineer:
         self.ngram_extractor.fit(texts)
         self.fitted = True
 
-    # ------------------------------------------------------
-    # Compute basic linguistic features
-    # ------------------------------------------------------
 
     def basic_features(self, text):
         """
@@ -63,10 +56,6 @@ class FeatureEngineer:
             repeated_char_ratio,
         ]
 
-    # ------------------------------------------------------
-    # Transform single text into full feature vector
-    # ------------------------------------------------------
-
     def transform(self, text):
         """
         Combine:
@@ -80,10 +69,6 @@ class FeatureEngineer:
         ngram = self.ngram_extractor.transform(text)
 
         return np.array(base + ngram, dtype=float)
-
-    # ------------------------------------------------------
-    # Batch processing for datasets
-    # ------------------------------------------------------
 
     def transform_batch(self, texts):
         return np.array([self.transform(t) for t in texts])

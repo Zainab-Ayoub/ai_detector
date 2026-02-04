@@ -6,19 +6,19 @@ import os
 import tempfile
 from docx import Document
 import pdfplumber
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+# from google.oauth2.credentials import Credentials
+# from google_auth_oauthlib.flow import Flow
+# from googleapiclient.discovery import build
+# from googleapiclient.http import MediaIoBaseDownload
 
 from predict import get_detailed_prediction, predict_text
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
-app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-this")
+# app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-this")
 
 # Google Drive OAuth Configuration
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-CLIENT_SECRETS_FILE = "client_secret.json"  # You'll create this from Google Cloud Console
+# SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+# CLIENT_SECRETS_FILE = "client_secret.json"  # You'll create this from Google Cloud Console
 
 
 @app.route("/")
@@ -82,141 +82,141 @@ def api_extract():
 
 
 # Google Drive Authentication Routes
-@app.route("/api/drive/auth")
-def drive_auth():
-    """Initiate Google Drive OAuth flow"""
-    try:
-        flow = Flow.from_client_secrets_file(
-            CLIENT_SECRETS_FILE,
-            scopes=SCOPES,
-            redirect_uri=request.url_root + 'api/drive/callback'
-        )
-        authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true'
-        )
-        session['state'] = state
-        return jsonify(auth_url=authorization_url)
-    except FileNotFoundError:
-        return jsonify(error="client_secret.json not found. Please configure Google OAuth."), 500
-    except Exception as e:
-        return jsonify(error=f"OAuth setup failed: {str(e)}"), 500
+# @app.route("/api/drive/auth")
+# def drive_auth():
+#     """Initiate Google Drive OAuth flow"""
+#     try:
+#         flow = Flow.from_client_secrets_file(
+#             CLIENT_SECRETS_FILE,
+#             scopes=SCOPES,
+#             redirect_uri=request.url_root + 'api/drive/callback'
+#         )
+#         authorization_url, state = flow.authorization_url(
+#             access_type='offline',
+#             include_granted_scopes='true'
+#         )
+#         session['state'] = state
+#         return jsonify(auth_url=authorization_url)
+#     except FileNotFoundError:
+#         return jsonify(error="client_secret.json not found. Please configure Google OAuth."), 500
+#     except Exception as e:
+#         return jsonify(error=f"OAuth setup failed: {str(e)}"), 500
 
 
-@app.route("/api/drive/callback")
-def drive_callback():
-    """Handle OAuth callback"""
-    try:
-        state = session.get('state')
-        flow = Flow.from_client_secrets_file(
-            CLIENT_SECRETS_FILE,
-            scopes=SCOPES,
-            state=state,
-            redirect_uri=request.url_root + 'api/drive/callback'
-        )
-        flow.fetch_token(authorization_response=request.url)
+# @app.route("/api/drive/callback")
+# def drive_callback():
+#     """Handle OAuth callback"""
+#     try:
+#         state = session.get('state')
+#         flow = Flow.from_client_secrets_file(
+#             CLIENT_SECRETS_FILE,
+#             scopes=SCOPES,
+#             state=state,
+#             redirect_uri=request.url_root + 'api/drive/callback'
+#         )
+#         flow.fetch_token(authorization_response=request.url)
         
-        credentials = flow.credentials
-        session['credentials'] = {
-            'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes
-        }
+#         credentials = flow.credentials
+#         session['credentials'] = {
+#             'token': credentials.token,
+#             'refresh_token': credentials.refresh_token,
+#             'token_uri': credentials.token_uri,
+#             'client_id': credentials.client_id,
+#             'client_secret': credentials.client_secret,
+#             'scopes': credentials.scopes
+#         }
         
-        return """
-        <html>
-            <body>
-                <script>
-                    window.opener.postMessage({type: 'drive-auth-success'}, '*');
-                    window.close();
-                </script>
-                <p>Authentication successful! You can close this window.</p>
-            </body>
-        </html>
-        """
-    except Exception as e:
-        return f"<html><body><p>Authentication failed: {str(e)}</p></body></html>", 400
+#         return """
+#         <html>
+#             <body>
+#                 <script>
+#                     window.opener.postMessage({type: 'drive-auth-success'}, '*');
+#                     window.close();
+#                 </script>
+#                 <p>Authentication successful! You can close this window.</p>
+#             </body>
+#         </html>
+#         """
+#     except Exception as e:
+#         return f"<html><body><p>Authentication failed: {str(e)}</p></body></html>", 400
 
 
-@app.route("/api/drive/status")
-def drive_status():
-    """Check if user is authenticated with Google Drive"""
-    if 'credentials' in session:
-        return jsonify(authenticated=True)
-    return jsonify(authenticated=False)
+# @app.route("/api/drive/status")
+# def drive_status():
+#     """Check if user is authenticated with Google Drive"""
+#     if 'credentials' in session:
+#         return jsonify(authenticated=True)
+#     return jsonify(authenticated=False)
 
 
-@app.post("/api/drive/download")
-def drive_download():
-    """Download file from Google Drive and extract text"""
-    if 'credentials' not in session:
-        return jsonify(error="Not authenticated with Google Drive"), 401
+# @app.post("/api/drive/download")
+# def drive_download():
+#     """Download file from Google Drive and extract text"""
+#     if 'credentials' not in session:
+#         return jsonify(error="Not authenticated with Google Drive"), 401
     
-    payload = request.get_json(silent=True) or {}
-    file_id = payload.get("file_id")
+#     payload = request.get_json(silent=True) or {}
+#     file_id = payload.get("file_id")
     
-    if not file_id:
-        return jsonify(error="No file_id provided"), 400
+#     if not file_id:
+#         return jsonify(error="No file_id provided"), 400
     
-    try:
-        credentials = Credentials(**session['credentials'])
-        service = build('drive', 'v3', credentials=credentials)
+#     try:
+#         credentials = Credentials(**session['credentials'])
+#         service = build('drive', 'v3', credentials=credentials)
         
-        # Get file metadata
-        file_metadata = service.files().get(fileId=file_id, fields='name,mimeType').execute()
-        filename = file_metadata.get('name', '').lower()
-        mime_type = file_metadata.get('mimeType', '')
+#         # Get file metadata
+#         file_metadata = service.files().get(fileId=file_id, fields='name,mimeType').execute()
+#         filename = file_metadata.get('name', '').lower()
+#         mime_type = file_metadata.get('mimeType', '')
         
-        # Download file content
-        request_obj = service.files().get_media(fileId=file_id)
-        file_stream = io.BytesIO()
-        downloader = MediaIoBaseDownload(file_stream, request_obj)
+#         # Download file content
+#         request_obj = service.files().get_media(fileId=file_id)
+#         file_stream = io.BytesIO()
+#         downloader = MediaIoBaseDownload(file_stream, request_obj)
         
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
+#         done = False
+#         while not done:
+#             status, done = downloader.next_chunk()
         
-        file_stream.seek(0)
+#         file_stream.seek(0)
         
-        # Extract text based on file type
-        text = ""
+#         # Extract text based on file type
+#         text = ""
         
-        if 'pdf' in mime_type or filename.endswith('.pdf'):
-            with pdfplumber.open(file_stream) as pdf:
-                pages = [page.extract_text() or "" for page in pdf.pages]
-            text = "\n".join(pages).strip()
+#         if 'pdf' in mime_type or filename.endswith('.pdf'):
+#             with pdfplumber.open(file_stream) as pdf:
+#                 pages = [page.extract_text() or "" for page in pdf.pages]
+#             text = "\n".join(pages).strip()
             
-        elif 'word' in mime_type or filename.endswith('.docx'):
-            doc = Document(file_stream)
-            text = "\n".join([p.text for p in doc.paragraphs]).strip()
+#         elif 'word' in mime_type or filename.endswith('.docx'):
+#             doc = Document(file_stream)
+#             text = "\n".join([p.text for p in doc.paragraphs]).strip()
             
-        elif 'text' in mime_type or filename.endswith(('.txt', '.md')):
-            text = file_stream.read().decode('utf-8', errors='ignore').strip()
+#         elif 'text' in mime_type or filename.endswith(('.txt', '.md')):
+#             text = file_stream.read().decode('utf-8', errors='ignore').strip()
             
-        elif 'document' in mime_type:  # Google Docs
-            # Export as plain text
-            request_obj = service.files().export_media(fileId=file_id, mimeType='text/plain')
-            file_stream = io.BytesIO()
-            downloader = MediaIoBaseDownload(file_stream, request_obj)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-            file_stream.seek(0)
-            text = file_stream.read().decode('utf-8', errors='ignore').strip()
+#         elif 'document' in mime_type:  # Google Docs
+#             # Export as plain text
+#             request_obj = service.files().export_media(fileId=file_id, mimeType='text/plain')
+#             file_stream = io.BytesIO()
+#             downloader = MediaIoBaseDownload(file_stream, request_obj)
+#             done = False
+#             while not done:
+#                 status, done = downloader.next_chunk()
+#             file_stream.seek(0)
+#             text = file_stream.read().decode('utf-8', errors='ignore').strip()
             
-        else:
-            return jsonify(error=f"Unsupported file type: {mime_type}"), 400
+#         else:
+#             return jsonify(error=f"Unsupported file type: {mime_type}"), 400
         
-        if not text:
-            return jsonify(error="Unable to extract text from file"), 400
+#         if not text:
+#             return jsonify(error="Unable to extract text from file"), 400
         
-        return jsonify(text=text, filename=file_metadata.get('name'))
+#         return jsonify(text=text, filename=file_metadata.get('name'))
         
-    except Exception as e:
-        return jsonify(error=f"Failed to download file: {str(e)}"), 500
+#     except Exception as e:
+#         return jsonify(error=f"Failed to download file: {str(e)}"), 500
 
 
 def _split_sentences(text):

@@ -18,10 +18,6 @@ class NgramExtractor:
         self.word_vocab = None
         self.char_vocab = None
 
-    # ------------------------------------------------------
-    # Basic n-gram extraction functions
-    # ------------------------------------------------------
-
     def _extract_word_ngrams(self, text, n=2):
         words = clean_text(text).split()
         return [" ".join(words[i:i+n]) for i in range(len(words)-n+1)]
@@ -29,10 +25,6 @@ class NgramExtractor:
     def _extract_char_ngrams(self, text, n=3):
         cleaned = clean_text(text)
         return [cleaned[i:i+n] for i in range(len(cleaned)-n+1)]
-
-    # ------------------------------------------------------
-    # Build vocabularies based on training data
-    # ------------------------------------------------------
 
     def fit(self, texts):
         """
@@ -52,10 +44,6 @@ class NgramExtractor:
         # Select top-K most common n-grams
         self.word_vocab = [w for w, _ in Counter(word_grams).most_common(self.max_features)]
         self.char_vocab = [c for c, _ in Counter(char_grams).most_common(self.max_features)]
-
-    # ------------------------------------------------------
-    # Vectorize new text using the learned vocabulary
-    # ------------------------------------------------------
 
     def transform(self, text):
         """
@@ -90,10 +78,6 @@ class NgramExtractor:
             features.append(char_counts[c])
 
         return features
-
-    # ------------------------------------------------------
-    # Batch transform (for datasets)
-    # ------------------------------------------------------
 
     def transform_batch(self, texts):
         """
