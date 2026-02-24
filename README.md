@@ -163,7 +163,7 @@ Then open: `http://127.0.0.1:5000`
 ## Screenshots
 
 Flask web app homepage
-`![description](screenshots/01_web_app_home.png)` 
+![description](screenshots/01_web_app_home.png)
 | 2 | `screenshots/02_predict_human.png` | Human text → confident Human prediction |
 | 3 | `screenshots/03_predict_ai.png` | AI text → confident AI prediction |
 | 4 | `screenshots/04_predict_mixed.png` | Mixed text → flagged as Uncertain |
