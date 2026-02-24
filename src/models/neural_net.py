@@ -28,9 +28,9 @@ def build_neural_net(vocab_size, embedding_dim, max_length, num_classes):
         layers.Dense(128, activation='relu'),
         layers.Dropout(0.3),
 
-        layers.Dense(64, activation='relu'),
+        layers.Dense(64, activation='relu'), # rectified linear unit, checks importance
 
-        layers.Dense(num_classes, activation='softmax')  # Multi-class classification
+        layers.Dense(num_classes, activation='softmax')  # multi-class classification
     ])
 
     model.compile(
