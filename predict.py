@@ -141,7 +141,6 @@ if __name__ == "__main__":
     print("="*60)
     
     print("\nNOTE: For best accuracy, provide at least 50 words.")
-    print("      Short texts (like song lyrics) may be unreliable.")
     print("\nEnter text to check (or 'quit' to exit):\n")
     
     while True:

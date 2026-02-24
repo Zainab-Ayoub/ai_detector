@@ -9,7 +9,7 @@ def build_lstm_model(vocab_size, embedding_dim, max_length, num_classes):
     Parameters:
     - vocab_size: size of tokenizer vocabulary
     - embedding_dim: size of word embedding vectors
-    - max_length: maximum sequence length (padding)
+    - max_length: maximum sequence length 
     - num_classes: number of output classes
     """
 

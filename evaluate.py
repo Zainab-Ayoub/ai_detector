@@ -38,10 +38,10 @@ def ensemble_predict(preds):
 def print_metrics(y_true, y_pred, name):
     print(f"\n🔹 {name} Metrics")
     print("--------------------------------")
-    print("Accuracy :", accuracy_score(y_true, y_pred))
-    print("Precision:", precision_score(y_true, y_pred, average="weighted"))
-    print("Recall   :", recall_score(y_true, y_pred, average="weighted"))
-    print("F1 Score :", f1_score(y_true, y_pred, average="weighted"))
+    print("Accuracy :", accuracy_score(y_true, y_pred)) # total correct predictions
+    print("Precision:", precision_score(y_true, y_pred, average="weighted")) # reliabilty of positive predictions
+    print("Recall   :", recall_score(y_true, y_pred, average="weighted")) # ability to find all positive instances
+    print("F1 Score :", f1_score(y_true, y_pred, average="weighted")) # harmonic mean, balances precision and recall
 
 
 def evaluate():
@@ -82,7 +82,7 @@ def evaluate():
 
     print_metrics(y_true, final_pred, "Ensemble")
 
-    print("\n🎉 Evaluation completed!")
+    print("\n Evaluation completed!")
 
 
 if __name__ == "__main__":
