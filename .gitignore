@@ -19,6 +19,17 @@ ENV/
 .ipynb_checkpoints
 notebooks/.ipynb_checkpoints/
 
+# React / Node
+frontend/node_modules/
+frontend/dist/
+
+# Models & data (too large for GitHub)
+models/*.pkl
+data/master_training_data.csv
+data/raid_local.csv
+data/train_v2_drcat_02.csv
+outputs/
+
 # IDEs
 .vscode/
 .idea/

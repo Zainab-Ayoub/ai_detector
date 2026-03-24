@@ -24,9 +24,27 @@ ai_detector/
 │   └── train_v2_drcat_02.csv          # DAIGT dataset (Kaggle)
 │
 ├── frontend/
-│   ├── app.js                         # Frontend JavaScript logic
-│   ├── index.html                     # Main web interface
-│   └── styles.css                     # Styling
+│   ├── src/
+│   │   ├── App.jsx                    # Root React component
+│   │   ├── main.jsx                   # React entry point
+│   │   ├── index.css                  # Global styles
+│   │   ├── hooks/
+│   │   │   └── useDetector.js         # All state & logic
+│   │   └── components/
+│   │       ├── Header.jsx
+│   │       ├── InputPane/
+│   │       │   ├── InputPane.jsx      # Left pane
+│   │       │   ├── TextEditor.jsx     # Paste tab
+│   │       │   ├── UploadPanel.jsx    # Upload tab
+│   │       │   └── HighlightPanel.jsx # Sentence highlights
+│   │       └── ResultPane/
+│   │           ├── ResultPane.jsx     # Right pane
+│   │           ├── ScoreRing.jsx      # Circular confidence score
+│   │           ├── ResultTags.jsx     # AI / Human / Mixed badges
+│   │           └── ResultBars.jsx     # Probability bars
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
 │
 ├── models/
 │   ├── logistic_model_full.pkl        # Trained logistic regression model
@@ -142,21 +160,21 @@ pip install -r requirements.txt
 
 ## How to Run
 
-### Train the model
-```bash
-python train.py
-```
-
-### Evaluate the model
-```bash
-python evaluate.py
-```
-
-### Run the web app
+### 1. Start the Flask backend
 ```bash
 python web_app.py
 ```
-Then open: `http://127.0.0.1:5000`
+
+### 2. Start the React frontend (in a new terminal)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open: `http://localhost:5173`
+
+> The frontend (Vite) proxies all `/api` calls to Flask on port 8000 automatically.
 
 ---
 
